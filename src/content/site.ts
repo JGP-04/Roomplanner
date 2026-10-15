@@ -48,21 +48,21 @@ export const processSteps: readonly ProcessStep[] = [
     number: "01",
     title: "Define tu espacio",
     description:
-      "Parte de las medidas, necesidades y sensaciones que quieres lograr. La buena planificación empieza por escuchar cómo vives.",
+      "Introduce el ancho, largo y alto del ambiente para comenzar con una base a escala.",
     icon: Ruler,
   },
   {
     number: "02",
     title: "Explora posibilidades",
     description:
-      "Compara distribuciones, materiales y estilos en un mismo lugar, con decisiones visuales más claras y menos incertidumbre.",
+      "Crea objetos con medidas propias y consérvalos en el catálogo del proyecto para volver a usarlos.",
     icon: Layers3,
   },
   {
     number: "03",
     title: "Visualiza y comparte",
     description:
-      "Comunica una idea de forma comprensible antes de ejecutarla y alinea a todas las personas que participan del proyecto.",
+      "Coloca, mueve, rota y escala cada pieza para explorar la distribución del espacio.",
     icon: Eye,
   },
 ];

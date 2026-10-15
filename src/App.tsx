@@ -27,14 +27,13 @@ export function App() {
               <em>antes de existir.</em>
             </h1>
             <p className="hero-intro">
-              Una nueva forma de imaginar, planificar y compartir interiores.
-              ROOMPLANNR está naciendo para acercar las ideas de quienes habitan
-              un espacio y quienes saben transformarlo.
+              Imagina, planifica y comparte interiores. Define tu ambiente,
+              crea objetos a medida y explora cómo se relacionan en el espacio.
             </p>
             <div className="hero-actions">
               <Button asChild>
-                <a href="#como-funciona">
-                  Conocer la idea <ArrowDownRight aria-hidden="true" size={18} />
+                <a href="/editor">
+                  Iniciar el diseño <ArrowDownRight aria-hidden="true" size={18} />
                 </a>
               </Button>
               <a className="text-link" href="#para-quien">
@@ -62,14 +61,14 @@ export function App() {
           aria-labelledby="process-title"
         >
           <div className="section-heading">
-            <p className="eyebrow">Así funcionará</p>
+            <p className="eyebrow">Así funciona</p>
             <h2 id="process-title">
               Del primer boceto a una idea que todos pueden ver.
             </h2>
           </div>
           <p className="section-lead">
-            Estamos construyendo un proceso simple para que diseñar un interior
-            sea menos abstracto, más colaborativo y mucho más claro.
+            Comienza por un ambiente con medidas reales, crea tus piezas y
+            colócalas en el espacio para tomar decisiones con más claridad.
           </p>
 
           <div className="process-grid">
@@ -135,15 +134,15 @@ export function App() {
         <section id="vision" className="vision-section" aria-labelledby="vision-title">
           <div className="vision-copy">
             <p className="eyebrow">La visión</p>
-            <h2 id="vision-title">Una herramienta que crecerá con cada proyecto.</h2>
+            <h2 id="vision-title">Un primer espacio para tus ideas.</h2>
             <p>
-              Esta landing es el primer paso. En las próximas fases,
-              ROOMPLANNR evolucionará hacia un entorno visual para modelar,
-              comparar y presentar espacios en tres dimensiones.
+              El editor permite crear ambientes rectangulares, guardar objetos
+              en un catálogo y organizarlos en tres dimensiones. Seguiremos
+              ampliando las herramientas de modelado y presentación.
             </p>
             <div className="future-note">
               <Sparkles aria-hidden="true" size={19} />
-              <span>El editor 3D aún no está disponible.</span>
+              <a href="/editor">Abrir el editor 3D</a>
             </div>
           </div>
 

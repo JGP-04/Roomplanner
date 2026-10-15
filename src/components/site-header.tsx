@@ -18,7 +18,7 @@ export function SiteHeader() {
       </nav>
 
       <Button asChild size="sm" className="header-cta">
-        <a href="#contacto">Seguir el proyecto</a>
+        <a href="/editor">Iniciar el diseño</a>
       </Button>
 
       <details className="mobile-menu">
@@ -28,6 +28,7 @@ export function SiteHeader() {
           <span className="sr-only">Abrir navegación</span>
         </summary>
         <nav aria-label="Navegación móvil">
+          <a href="/editor">Iniciar el diseño</a>
           {navigation.map((item) => (
             <a key={item.href} href={item.href}>
               {item.label}
