@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, Box, Check, FolderOpen, LogIn, LogOut, Move3D, Plus, Redo2, Rotate3D, Save, Scaling, Trash2, Undo2 } from "lucide-react";
 import { EditorSetupSkeleton, ProjectGridSkeleton, ViewportSkeleton } from "@/components/editor-skeleton";
 import { Button } from "@/components/ui/button";
@@ -49,13 +49,13 @@ function NewProjectForm({ onCreate, busy }: NewProjectFormProps) {
 
   return (
     <form className="setup-form" onSubmit={submit} noValidate>
-      <label>Nombre del proyecto<input value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} required /></label>
+      <label>Nombre del proyecto<input value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "new-project-error" : undefined} /></label>
       <div className="field-grid">
-        <label>Ancho · cm<input type="number" min={5} max={10000} step={1} value={width} onChange={(event) => setWidth(event.target.value)} /></label>
-        <label>Largo · cm<input type="number" min={5} max={10000} step={1} value={depth} onChange={(event) => setDepth(event.target.value)} /></label>
-        <label>Alto · cm<input type="number" min={5} max={10000} step={1} value={height} onChange={(event) => setHeight(event.target.value)} /></label>
+        <label>Ancho · cm<input type="number" min={5} max={10000} step={1} value={width} onChange={(event) => setWidth(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "new-project-error" : undefined} /></label>
+        <label>Largo · cm<input type="number" min={5} max={10000} step={1} value={depth} onChange={(event) => setDepth(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "new-project-error" : undefined} /></label>
+        <label>Alto · cm<input type="number" min={5} max={10000} step={1} value={height} onChange={(event) => setHeight(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "new-project-error" : undefined} /></label>
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && <p className="form-error" id="new-project-error" role="alert">{error}</p>}
       <Button type="submit" disabled={busy} aria-busy={busy}>
         Crear y abrir editor <Plus size={17} aria-hidden="true" />
       </Button>
@@ -111,24 +111,55 @@ function AuthForm({ onSuccess, onCancel }: AuthFormProps) {
   return (
     <div className="auth-card">
       <div className="panel-heading">
-        <div><p className="eyebrow">Proyectos persistentes</p><h2>{isRegistering ? "Crear cuenta" : "Iniciar sesión"}</h2></div>
+        <h2 id="auth-title">{isRegistering ? "Crear cuenta" : "Iniciar sesión"}</h2>
         <button type="button" className="quiet-button" onClick={onCancel}>Cerrar</button>
       </div>
-      <p>Guarda tus proyectos en tu cuenta para volver a abrirlos desde otra sesión.</p>
+      <p>Accede a tus proyectos guardados desde cualquier sesión.</p>
       <form className="setup-form" onSubmit={submit} noValidate>
-        <label>Correo electrónico<input type="email" autoComplete="email" value={email} maxLength={254} onChange={(event) => setEmail(event.target.value)} required /></label>
-        <label>Contraseña<input type="password" autoComplete={isRegistering ? "new-password" : "current-password"} minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+        <label>Correo electrónico<input type="email" autoComplete="email" value={email} maxLength={254} onChange={(event) => setEmail(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} /></label>
+        <label>Contraseña<input type="password" autoComplete={isRegistering ? "new-password" : "current-password"} minLength={8} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} /></label>
         {isRegistering && <>
           <small className="password-hint">Usa al menos 8 caracteres.</small>
-          <label>Repetir contraseña<input type="password" autoComplete="new-password" minLength={8} value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} required /></label>
+          <label>Repetir contraseña<input type="password" autoComplete="new-password" minLength={8} maxLength={128} value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} /></label>
         </>}
-        {error && <p className="form-error" role="alert">{error}</p>}
-        <Button type="submit" disabled={busy}>{isRegistering ? "Crear cuenta" : "Entrar"}</Button>
+        {error && <p className="form-error" id="auth-error" role="alert">{error}</p>}
+        <Button type="submit" disabled={busy} aria-busy={busy}>{busy ? "Comprobando…" : isRegistering ? "Crear cuenta" : "Entrar"}</Button>
       </form>
       <button className="text-button" type="button" onClick={() => { setIsRegistering(!isRegistering); setPasswordConfirmation(""); setError(""); }}>
         {isRegistering ? "Ya tengo cuenta" : "Quiero crear una cuenta"}
       </button>
     </div>
+  );
+}
+
+function AuthDialog({ onSuccess, onCancel }: AuthFormProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog.showModal();
+    dialog.querySelector<HTMLInputElement>("input")?.focus();
+    return () => {
+      if (dialog.open) dialog.close();
+      returnFocusRef.current?.focus();
+    };
+  }, []);
+
+  return (
+    <dialog
+      className="auth-dialog"
+      ref={dialogRef}
+      aria-labelledby="auth-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        onCancel();
+      }}
+    >
+      <AuthForm onSuccess={onSuccess} onCancel={onCancel} />
+    </dialog>
   );
 }
 
@@ -163,17 +194,17 @@ function CatalogForm({ onAdd }: { onAdd: (item: CatalogItem) => void }) {
 
   return (
     <form className="catalog-form" onSubmit={submit} noValidate>
-      <label>Nombre<input placeholder="Ej. Mesa de comedor" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} required /></label>
+      <label>Nombre<input placeholder="Ej. Mesa de comedor" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "catalog-error" : undefined} /></label>
       <label>Tipo<select value={kind} onChange={(event) => setKind(event.target.value as CatalogItem["kind"])}>
         <option value="box">Volumen</option><option value="table">Mesa</option><option value="shelf">Estantería</option>
       </select></label>
       <div className="field-grid compact-grid">
-        <label>Ancho · cm<input type="number" min={5} max={10000} value={width} onChange={(event) => setWidth(event.target.value)} /></label>
-        <label>Fondo · cm<input type="number" min={5} max={10000} value={depth} onChange={(event) => setDepth(event.target.value)} /></label>
-        <label>Alto · cm<input type="number" min={5} max={10000} value={height} onChange={(event) => setHeight(event.target.value)} /></label>
+        <label>Ancho · cm<input type="number" min={5} max={10000} value={width} onChange={(event) => setWidth(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "catalog-error" : undefined} /></label>
+        <label>Fondo · cm<input type="number" min={5} max={10000} value={depth} onChange={(event) => setDepth(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "catalog-error" : undefined} /></label>
+        <label>Alto · cm<input type="number" min={5} max={10000} value={height} onChange={(event) => setHeight(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "catalog-error" : undefined} /></label>
       </div>
       <label className="color-label">Color<input type="color" value={color} onChange={(event) => setColor(event.target.value)} /></label>
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && <p className="form-error" id="catalog-error" role="alert">{error}</p>}
       <Button type="submit" size="sm">Añadir objeto <Plus size={16} aria-hidden="true" /></Button>
     </form>
   );
@@ -438,22 +469,23 @@ export default function EditorPage() {
   }
 
   const selected = project?.instances.find((item) => item.id === selectedId) ?? null;
+  const saveLabel = mode === "guest" ? "Guardar en mi cuenta" : dirty ? "Guardar cambios" : "Guardado";
 
   return (
     <div className="editor-page">
       <header className="editor-header">
         <a href="/" className="wordmark" aria-label="ROOMPLANNR, volver al inicio">ROOM<span>PLANNR</span></a>
-        {project ? <p className="editor-project-title">{project.title} <span>· {mode === "guest" ? "Invitado" : "Mi cuenta"}</span></p> : <p className="editor-project-title">Estudio de diseño</p>}
+        {project ? <h1 className="editor-project-title">{project.title} <span>· {mode === "guest" ? "Invitado" : "Mi cuenta"}</span></h1> : <p className="editor-project-title">Estudio de diseño</p>}
         <div className="editor-header-actions">
-          {project && <button type="button" className="quiet-button" onClick={backToProjects}><FolderOpen size={17} aria-hidden="true" /> <span>Proyectos</span></button>}
-          {project && <Button className="editor-save-button" size="sm" onClick={saveProject} disabled={busy || (mode === "account" && !dirty)} aria-busy={busy} aria-label={mode === "guest" ? "Guardar en mi cuenta" : dirty ? "Guardar cambios" : "Proyecto guardado"}><Save size={16} aria-hidden="true" /> <span className="save-label-long">{mode === "guest" ? "Guardar en mi cuenta" : dirty ? "Guardar cambios" : "Guardado"}</span><span className="save-label-short">Guardar</span></Button>}
+          {project && <button type="button" className="quiet-button" onClick={backToProjects} aria-label="Volver a proyectos"><FolderOpen size={17} aria-hidden="true" /> <span>Proyectos</span></button>}
+          {project && <Button className="editor-save-button" size="sm" onClick={saveProject} disabled={busy || (mode === "account" && !dirty)} aria-busy={busy} aria-label={saveLabel}><Save size={16} aria-hidden="true" /> <span className="save-label-long">{saveLabel}</span><span className="save-label-short">Guardar</span></Button>}
           {!project && user && <button type="button" className="quiet-button" onClick={logout}><LogOut size={17} aria-hidden="true" /> Salir</button>}
         </div>
       </header>
 
-      {message && <div className="editor-message" role="status">{message}<button type="button" onClick={() => setMessage("")} aria-label="Cerrar aviso">×</button></div>}
+      {message && <div className="editor-message" role="status" aria-live="polite">{message}<button type="button" onClick={() => setMessage("")} aria-label="Cerrar aviso">×</button></div>}
 
-      {showAuth && <div className="auth-overlay"><AuthForm onSuccess={authenticated} onCancel={() => setShowAuth(false)} /></div>}
+      {showAuth && <AuthDialog onSuccess={authenticated} onCancel={() => setShowAuth(false)} />}
 
       {checkingSession && !project ? <EditorSetupSkeleton showHeader={false} /> : project ? (
         <div className="editor-layout">
@@ -496,7 +528,7 @@ export default function EditorPage() {
           <main className="editor-main">
             <div className="canvas-toolbar">
               <span><Check size={16} aria-hidden="true" /> Ambiente {metersToCentimeters(project.room.width)} × {metersToCentimeters(project.room.depth)} × {metersToCentimeters(project.room.height)} cm</span>
-              <span>{mode === "guest" ? "Guardado en este navegador" : dirty ? "Cambios sin guardar" : "Todos los cambios guardados"}</span>
+              <span aria-live="polite">{mode === "guest" ? "Guardado en este navegador" : dirty ? "Cambios sin guardar" : "Todos los cambios guardados"}</span>
             </div>
             <Suspense fallback={<ViewportSkeleton />}>
               <SceneViewport project={project} />

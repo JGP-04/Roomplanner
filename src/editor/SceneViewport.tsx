@@ -192,7 +192,12 @@ export function SceneViewport({ project }: { project: ProjectDocument }) {
   }
 
   return (
-    <div className="editor-canvas" role="region" aria-label={`Visor tridimensional del proyecto ${project.title}`}>
+    <div
+      className="editor-canvas"
+      role="region"
+      aria-label={`Visor tridimensional del proyecto ${project.title}`}
+      aria-describedby="canvas-instructions"
+    >
       <Canvas
         key={`${project.room.width}-${project.room.depth}-${project.room.height}`}
         shadows
@@ -258,7 +263,7 @@ export function SceneViewport({ project }: { project: ProjectDocument }) {
           </button>
         </div>
       </div>
-      <div className="canvas-hint">
+      <div className="canvas-hint" id="canvas-instructions">
         <span className="canvas-hint-touch">Un dedo para {navigationMode === "rotate" ? "rotar" : "mover"} · pellizca para zoom</span>
         <span className="canvas-hint-pointer">Arrastra para orbitar · rueda para acercar</span>
         <span> · selecciona un objeto para editarlo</span>

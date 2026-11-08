@@ -13,6 +13,7 @@
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -99,6 +100,11 @@ a {
   background: #d6cec3;
   color: #6d655c;
   cursor: not-allowed;
+}
+
+[aria-invalid="true"] {
+  border-color: #a33d30 !important;
+  box-shadow: 0 0 0 1px #a33d30;
 }
 
 .sr-only {
@@ -912,6 +918,10 @@ a {
 }
 
 @media (max-width: 480px) {
+  .skeleton-field-row {
+    grid-template-columns: 1fr;
+  }
+
   .hero h1 {
     font-size: clamp(3.35rem, 17vw, 4.75rem);
   }
