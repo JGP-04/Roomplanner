@@ -1,9 +1,9 @@
-import { useRef } from "react";
+import { useRef, useState, type ComponentRef, type RefObject } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Edges, OrbitControls, TransformControls } from "@react-three/drei";
-import type { Group } from "three";
+import { Hand, Rotate3D, Scan, ZoomIn, ZoomOut } from "lucide-react";
+import { TOUCH, type Group } from "three";
 import type { CatalogItem, ObjectInstance, ProjectDocument } from "@/domain/project";
-import { fitInstance } from "./geometry";
 import { useEditorStore } from "./store";
 
 interface ShapeProps {
@@ -105,7 +105,29 @@ function SceneObject({ instance, item, selected }: {
   const tool = useEditorStore((state) => state.tool);
   const room = useEditorStore((state) => state.project?.room);
   const setSelected = useEditorStore((state) => state.setSelected);
-  const updateInstance = useEditorStore((state) => state.updateInstance);
+  const beginInstanceTransform = useEditorStore((state) => state.beginInstanceTransform);
+  const previewInstanceTransform = useEditorStore((state) => state.previewInstanceTransform);
+  const commitInstanceTransform = useEditorStore((state) => state.commitInstanceTransform);
+
+  function currentTransform() {
+    const object = objectRef.current;
+    if (!object) return null;
+    return {
+      position: [object.position.x, object.position.y, object.position.z] as [number, number, number],
+      rotationY: object.rotation.y,
+      scale: [object.scale.x, object.scale.y, object.scale.z] as [number, number, number],
+    };
+  }
+
+  function syncObjectToStoredTransform() {
+    const object = objectRef.current;
+    const stored = useEditorStore.getState().project?.instances.find((entry) => entry.id === instance.id);
+    if (!object || !stored) return;
+    object.position.set(...stored.position);
+    object.rotation.set(0, stored.rotationY, 0);
+    object.scale.set(...stored.scale);
+    object.updateMatrixWorld();
+  }
 
   const model = (
     <group
@@ -124,35 +146,53 @@ function SceneObject({ instance, item, selected }: {
 
   if (!selected || !room) return model;
 
-  return (
+  return <>
+    {model}
     <TransformControls
+      object={objectRef as RefObject<Group>}
       mode={tool}
       size={0.8}
-      onMouseUp={() => {
-        const object = objectRef.current;
-        if (!object) return;
-        const fitted = fitInstance({
-          ...instance,
-          position: [object.position.x, object.position.y, object.position.z],
-          rotationY: object.rotation.y,
-          scale: [object.scale.x, object.scale.y, object.scale.z],
-        }, item, room, true);
-        updateInstance(instance.id, fitted);
+      onMouseDown={beginInstanceTransform}
+      onObjectChange={() => {
+        const transform = currentTransform();
+        if (transform) {
+          previewInstanceTransform(instance.id, transform);
+          syncObjectToStoredTransform();
+        }
       }}
-    >
-      {model}
-    </TransformControls>
-  );
+      onMouseUp={() => {
+        const transform = currentTransform();
+        if (transform) {
+          commitInstanceTransform(instance.id, transform);
+          syncObjectToStoredTransform();
+        }
+      }}
+    />
+  </>;
 }
 
 export function SceneViewport({ project }: { project: ProjectDocument }) {
   const selectedId = useEditorStore((state) => state.selectedId);
   const setSelected = useEditorStore((state) => state.setSelected);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const [navigationMode, setNavigationMode] = useState<"rotate" | "pan">("rotate");
   const itemById = new Map(project.catalog.map((item) => [item.id, item]));
   const distance = Math.max(project.room.width, project.room.depth, project.room.height) * 1.7;
 
+  function zoom(direction: "in" | "out") {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    if (direction === "in") controls.dollyIn(0.82);
+    else controls.dollyOut(0.82);
+    controls.update();
+  }
+
+  function resetView() {
+    controlsRef.current?.reset();
+  }
+
   return (
-    <div className="editor-canvas" role="img" aria-label={`Visor tridimensional del proyecto ${project.title}`}>
+    <div className="editor-canvas" role="region" aria-label={`Visor tridimensional del proyecto ${project.title}`}>
       <Canvas
         key={`${project.room.width}-${project.room.depth}-${project.room.height}`}
         shadows
@@ -168,9 +208,61 @@ export function SceneViewport({ project }: { project: ProjectDocument }) {
           const item = itemById.get(instance.catalogItemId);
           return item && <SceneObject key={instance.id} instance={instance} item={item} selected={instance.id === selectedId} />;
         })}
-        <OrbitControls makeDefault target={[0, project.room.height / 2, 0]} minDistance={0.5} maxDistance={distance * 5} maxPolarAngle={Math.PI / 2 - 0.02} />
+        <OrbitControls
+          ref={controlsRef}
+          makeDefault
+          target={[0, project.room.height / 2, 0]}
+          minDistance={0.5}
+          maxDistance={distance * 5}
+          maxPolarAngle={Math.PI / 2 - 0.02}
+          enableDamping
+          dampingFactor={0.08}
+          touches={{
+            ONE: navigationMode === "rotate" ? TOUCH.ROTATE : TOUCH.PAN,
+            TWO: TOUCH.DOLLY_PAN,
+          }}
+        />
       </Canvas>
-      <div className="canvas-hint">Arrastra para orbitar · rueda para acercar · selecciona un objeto para editarlo</div>
+      <div className="viewport-controls" aria-label="Controles de la vista 3D">
+        <div className="viewport-mode" role="group" aria-label="Gesto de un dedo">
+          <button
+            type="button"
+            className={navigationMode === "rotate" ? "active" : ""}
+            onClick={() => setNavigationMode("rotate")}
+            aria-pressed={navigationMode === "rotate"}
+            title="Rotar la vista con un dedo"
+          >
+            <Rotate3D size={19} aria-hidden="true" />
+            <span>Rotar</span>
+          </button>
+          <button
+            type="button"
+            className={navigationMode === "pan" ? "active" : ""}
+            onClick={() => setNavigationMode("pan")}
+            aria-pressed={navigationMode === "pan"}
+            title="Mover la vista con un dedo"
+          >
+            <Hand size={19} aria-hidden="true" />
+            <span>Mover</span>
+          </button>
+        </div>
+        <div className="viewport-actions" role="group" aria-label="Zoom y encuadre">
+          <button type="button" onClick={() => zoom("in")} aria-label="Acercar vista" title="Acercar">
+            <ZoomIn size={20} aria-hidden="true" />
+          </button>
+          <button type="button" onClick={() => zoom("out")} aria-label="Alejar vista" title="Alejar">
+            <ZoomOut size={20} aria-hidden="true" />
+          </button>
+          <button type="button" onClick={resetView} aria-label="Restablecer encuadre" title="Restablecer encuadre">
+            <Scan size={20} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <div className="canvas-hint">
+        <span className="canvas-hint-touch">Un dedo para {navigationMode === "rotate" ? "rotar" : "mover"} · pellizca para zoom</span>
+        <span className="canvas-hint-pointer">Arrastra para orbitar · rueda para acercar</span>
+        <span> · selecciona un objeto para editarlo</span>
+      </div>
     </div>
   );
 }

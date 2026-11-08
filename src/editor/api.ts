@@ -8,15 +8,27 @@ export interface AccountUser {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${baseUrl}/api${path}`, {
-    credentials: "include",
-    signal: AbortSignal.timeout(8000),
-    headers: { "Content-Type": "application/json", ...init.headers },
-    ...init,
-  });
-  const body = await response.json().catch(() => ({}));
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}/api${path}`, {
+      credentials: "include",
+      signal: AbortSignal.timeout(8000),
+      headers: { "Content-Type": "application/json", ...init.headers },
+      ...init,
+    });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "TimeoutError") {
+      throw new Error("El servidor tardó demasiado en responder.");
+    }
+    throw new Error("No se pudo conectar con el servidor de ROOMPLANNR.");
+  }
+  const body = await response.json().catch(() => ({})) as { error?: unknown };
   if (!response.ok) {
-    throw new Error(typeof body.error === "string" ? body.error : "No se pudo completar la operación");
+    throw new Error(typeof body.error === "string"
+      ? body.error
+      : response.status >= 500
+        ? "El servidor de cuentas no está disponible."
+        : "No se pudo completar la operación");
   }
   return body as T;
 }

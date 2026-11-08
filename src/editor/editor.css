@@ -4,6 +4,12 @@
   color: #29241e;
 }
 
+.editor-page button,
+.editor-page input,
+.editor-page select {
+  touch-action: manipulation;
+}
+
 .editor-header {
   position: relative;
   z-index: 20;
@@ -15,6 +21,10 @@
   border-bottom: 1px solid var(--line);
   background: #f4efe7;
   padding: 0.8rem clamp(1rem, 2.5vw, 2.25rem);
+}
+
+.save-label-short {
+  display: none;
 }
 
 .editor-project-title {
@@ -234,6 +244,12 @@
   font-size: 0.78rem;
 }
 
+.password-hint {
+  margin-top: -0.8rem;
+  color: #776d63;
+  font-size: 0.72rem;
+}
+
 .resume-button,
 .login-link {
   width: 100%;
@@ -314,6 +330,35 @@
   color: #776d63;
   font-size: 0.75rem;
   line-height: 1.5;
+}
+
+.guest-project-card {
+  position: relative;
+}
+
+.guest-project-card > .project-card {
+  width: 100%;
+}
+
+.guest-project-delete {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #776d63;
+  cursor: pointer;
+  place-items: center;
+}
+
+.guest-project-delete:hover,
+.guest-project-delete:focus-visible {
+  background: #f2e6d7;
+  color: #9d3429;
 }
 
 .auth-overlay {
@@ -549,6 +594,70 @@
 
 .editor-canvas canvas {
   display: block;
+  touch-action: none;
+}
+
+.viewport-controls {
+  position: absolute;
+  z-index: 4;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  gap: 0.45rem;
+  width: 8.75rem;
+  border: 1px solid #cfc2b1;
+  border-radius: 0.8rem;
+  background: #fffaf2ed;
+  padding: 0.4rem;
+  box-shadow: 0 0.75rem 2rem #33281d1a;
+  backdrop-filter: blur(14px);
+}
+
+.viewport-mode,
+.viewport-actions {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.viewport-mode {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.viewport-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid #ded2c3;
+  padding-top: 0.4rem;
+}
+
+.viewport-controls button {
+  display: grid;
+  min-width: 0;
+  min-height: 2.75rem;
+  place-items: center;
+  gap: 0.15rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #4d453d;
+  cursor: pointer;
+  font: inherit;
+}
+
+.viewport-mode button {
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.viewport-controls button:hover,
+.viewport-controls button:focus-visible {
+  background: #f1e7da;
+  color: #893d28;
+}
+
+.viewport-controls button.active {
+  border-color: #c98167;
+  background: #f5e2d6;
+  color: #893d28;
 }
 
 .canvas-hint {
@@ -565,6 +674,10 @@
   color: #564d44;
   font-size: 0.69rem;
   pointer-events: none;
+}
+
+.canvas-hint-touch {
+  display: none;
 }
 
 .properties-content h2 {
@@ -626,9 +739,28 @@
   }
 }
 
+@media (max-width: 900px) {
+  .editor-setup {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .setup-intro h1 {
+    max-width: 14ch;
+  }
+
+  .project-library {
+    grid-column: 1;
+  }
+}
+
 @media (max-width: 750px) {
   .editor-header {
     grid-template-columns: 1fr auto;
+    position: sticky;
+    top: 0;
+    min-height: 4.25rem;
+    padding: 0.6rem 0.75rem;
   }
 
   .editor-header .editor-project-title {
@@ -636,8 +768,18 @@
   }
 
   .editor-header-actions .quiet-button {
-    font-size: 0;
-    gap: 0;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .editor-header-actions .quiet-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
   }
 
   .editor-header-actions .quiet-button svg {
@@ -647,6 +789,7 @@
 
   .editor-setup {
     grid-template-columns: 1fr;
+    padding-top: 2.5rem;
   }
 
   .project-library {
@@ -660,26 +803,127 @@
 
   .editor-main {
     order: 0;
-    min-height: 30rem;
+    min-height: min(42rem, calc(100svh - 4.25rem));
   }
 
   .editor-sidebar {
-    order: 1;
+    order: 2;
     overflow: visible;
     border-top: 1px solid #d6c9b9;
     border-right: 0;
   }
 
   .editor-properties {
-    order: 2;
+    order: 1;
   }
 
   .editor-canvas {
-    min-height: 27rem;
+    min-height: 26rem;
   }
 
   .canvas-toolbar {
     flex-wrap: wrap;
+  }
+
+  .editor-side-section,
+  .editor-properties {
+    padding: 1.25rem;
+  }
+
+  .back-link {
+    width: 100%;
+    min-height: 3.75rem;
+  }
+
+  .tool-button,
+  .catalog-row button,
+  .history-row button,
+  .danger-button {
+    min-height: 2.75rem;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .canvas-hint-pointer {
+    display: none;
+  }
+
+  .canvas-hint-touch {
+    display: inline;
+  }
+
+  .viewport-controls button {
+    min-height: 3rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .editor-header-actions {
+    gap: 0.35rem;
+  }
+
+  .editor-save-button {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+  }
+
+  .save-label-long {
+    display: none;
+  }
+
+  .save-label-short {
+    display: inline;
+  }
+
+  .editor-setup {
+    padding-inline: 1rem;
+  }
+
+  .setup-intro h1 {
+    font-size: clamp(2.8rem, 14vw, 4rem);
+  }
+
+  .field-grid,
+  .field-grid.compact-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .setup-form input,
+  .catalog-form input:not([type="color"]),
+  .catalog-form select,
+  .properties-content input {
+    height: 3rem;
+    font-size: 1rem;
+  }
+
+  .canvas-toolbar {
+    min-height: 3.4rem;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .canvas-toolbar span:last-child {
+    display: none;
+  }
+
+  .viewport-controls {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .canvas-hint {
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    max-width: calc(100% - 1.5rem);
+    border-radius: 0.65rem;
+    line-height: 1.35;
+  }
+
+  .library-heading {
+    align-items: start;
+    flex-direction: column;
   }
 }
 
@@ -688,11 +932,16 @@
     font-size: 0.79rem;
   }
 
-  .editor-header-actions .inline-label {
-    display: none;
+  .save-label-short {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
   }
 
-  .field-grid {
-    gap: 0.4rem;
+  .editor-save-button {
+    width: 2.75rem;
+    padding: 0;
   }
 }
