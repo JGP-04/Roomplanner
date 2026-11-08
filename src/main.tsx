@@ -1,6 +1,7 @@
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { EditorSetupSkeleton } from "./components/editor-skeleton";
 import "./styles.css";
 
 const EditorPage = lazy(() => import("./editor/EditorPage"));
@@ -9,7 +10,7 @@ const isEditor = window.location.pathname === "/editor" || window.location.pathn
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     {isEditor ? (
-      <Suspense fallback={<p className="editor-loading">Preparando el editor…</p>}>
+      <Suspense fallback={<EditorSetupSkeleton />}>
         <EditorPage />
       </Suspense>
     ) : (

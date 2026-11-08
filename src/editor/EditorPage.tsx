@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
 import { ArrowLeft, Box, Check, FolderOpen, LogIn, LogOut, Move3D, Plus, Redo2, Rotate3D, Save, Scaling, Trash2, Undo2 } from "lucide-react";
+import { EditorSetupSkeleton, ProjectGridSkeleton, ViewportSkeleton } from "@/components/editor-skeleton";
 import { Button } from "@/components/ui/button";
 import { catalogItemSchema, projectPayloadSchema, roomSchema, type CatalogItem, type ObjectInstance, type ProjectDocument, type ProjectPayload, type ProjectSummary, type Room } from "@/domain/project";
 import { api, type AccountUser } from "./api";
@@ -266,18 +267,22 @@ export default function EditorPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [serverAvailable, setServerAvailable] = useState(true);
   const [guestProjects, setGuestProjects] = useState(listGuestProjects);
 
   const loadProjects = useCallback(async () => {
+    setProjectsLoading(true);
     try {
       const result = await api.projects();
       setProjects(result.projects);
       setServerAvailable(true);
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "No se pudieron cargar los proyectos");
+    } finally {
+      setProjectsLoading(false);
     }
   }, []);
 
@@ -450,7 +455,7 @@ export default function EditorPage() {
 
       {showAuth && <div className="auth-overlay"><AuthForm onSuccess={authenticated} onCancel={() => setShowAuth(false)} /></div>}
 
-      {checkingSession && !project ? <div className="editor-loading">Preparando ROOMPLANNR…</div> : project ? (
+      {checkingSession && !project ? <EditorSetupSkeleton showHeader={false} /> : project ? (
         <div className="editor-layout">
           <aside className="editor-sidebar" aria-label="Herramientas y catálogo">
             <button className="back-link" type="button" onClick={backToProjects}><ArrowLeft size={17} aria-hidden="true" /> Todos los proyectos</button>
@@ -493,7 +498,7 @@ export default function EditorPage() {
               <span><Check size={16} aria-hidden="true" /> Ambiente {metersToCentimeters(project.room.width)} × {metersToCentimeters(project.room.depth)} × {metersToCentimeters(project.room.height)} cm</span>
               <span>{mode === "guest" ? "Guardado en este navegador" : dirty ? "Cambios sin guardar" : "Todos los cambios guardados"}</span>
             </div>
-            <Suspense fallback={<div className="editor-loading">Preparando el visor 3D…</div>}>
+            <Suspense fallback={<ViewportSkeleton />}>
               <SceneViewport project={project} />
             </Suspense>
           </main>
@@ -523,7 +528,7 @@ export default function EditorPage() {
           </section>}
           {user && <section className="project-library" aria-labelledby="library-title">
             <div className="library-heading"><h2 id="library-title">Mis proyectos</h2><span>{user.email}</span></div>
-            {projects.length === 0 ? <p className="empty-note">Todavía no tienes proyectos guardados.</p> : <div className="project-grid">
+            {projectsLoading ? <ProjectGridSkeleton /> : projects.length === 0 ? <p className="empty-note">Todavía no tienes proyectos guardados.</p> : <div className="project-grid">
               {projects.map((item) => <button type="button" className="project-card" key={item.id} onClick={() => openProject(item.id)} disabled={busy}><FolderOpen size={22} aria-hidden="true" /><strong>{item.title}</strong><small>Actualizado {new Date(item.updatedAt).toLocaleDateString("es-AR")}</small></button>)}
             </div>}
           </section>}

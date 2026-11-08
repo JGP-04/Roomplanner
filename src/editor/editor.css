@@ -359,6 +359,37 @@
   color: #9d3429;
 }
 
+.skeleton-project-grid {
+  width: 100%;
+}
+
+.skeleton-project-card {
+  display: grid;
+  min-height: 11rem;
+  align-content: start;
+  gap: 0.85rem;
+  border: 1px solid #d6c9b9;
+  border-radius: 0.6rem;
+  background: #fffaf2;
+  padding: 1.25rem;
+}
+
+.skeleton-project-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.skeleton-project-title {
+  width: 68%;
+  height: 1.4rem;
+  margin-top: 0.4rem;
+}
+
+.skeleton-project-date {
+  width: 48%;
+  height: 0.7rem;
+}
+
 .auth-overlay {
   position: fixed;
   z-index: 90;
