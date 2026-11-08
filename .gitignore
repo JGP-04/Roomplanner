@@ -18,6 +18,10 @@
 /out/
 /dist/
 
+# local documentation and analysis artifacts
+/docs/
+/graphify-out/
+
 # production
 /build
 
