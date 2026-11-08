@@ -1,6 +1,19 @@
 import "dotenv/config";
 import { readFile, readdir } from "node:fs/promises";
-import { pool } from "./db.ts";
+import pg from "pg";
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL es obligatorio para ejecutar migraciones");
+
+const applicationRole = process.env.DATABASE_APP_ROLE;
+if (!applicationRole && process.env.NODE_ENV === "production") {
+  throw new Error("DATABASE_APP_ROLE es obligatorio en producción");
+}
+if (applicationRole && !/^[a-z_][a-z0-9_]{0,62}$/i.test(applicationRole)) {
+  throw new Error("DATABASE_APP_ROLE no es un identificador PostgreSQL válido");
+}
+
+const pool = new pg.Pool({ connectionString: databaseUrl, max: 1, application_name: "roomplannr-migrate" });
 
 const sqlDirectory = new URL("./sql/", import.meta.url);
 const files = (await readdir(sqlDirectory)).filter((name) => /^\d+_[\w-]+\.sql$/.test(name)).sort();
@@ -17,6 +30,19 @@ try {
     await client.query(await readFile(new URL(file, sqlDirectory), "utf8"));
     await client.query("INSERT INTO schema_migrations (name) VALUES ($1)", [file]);
     process.stdout.write(`Aplicada ${file}\n`);
+  }
+  if (applicationRole) {
+    const quotedRole = `"${applicationRole}"`;
+    const roleExists = await client.query("SELECT 1 FROM pg_roles WHERE rolname = $1", [applicationRole]);
+    if (!roleExists.rowCount) throw new Error(`El rol de aplicación ${applicationRole} no existe`);
+    await client.query(`GRANT USAGE ON SCHEMA public TO ${quotedRole}`);
+    await client.query(`GRANT SELECT, INSERT, UPDATE, DELETE ON projects, catalog_items, object_instances TO ${quotedRole}`);
+    await client.query(`GRANT EXECUTE ON FUNCTION app_current_user_id() TO ${quotedRole}`);
+    await client.query(`GRANT EXECUTE ON FUNCTION app_register_user(text, text) TO ${quotedRole}`);
+    await client.query(`GRANT EXECUTE ON FUNCTION app_find_user_for_login(text) TO ${quotedRole}`);
+    await client.query(`GRANT EXECUTE ON FUNCTION app_create_session(uuid, text) TO ${quotedRole}`);
+    await client.query(`GRANT EXECUTE ON FUNCTION app_get_session_user(text) TO ${quotedRole}`);
+    await client.query(`GRANT EXECUTE ON FUNCTION app_delete_session(text) TO ${quotedRole}`);
   }
   await client.query("COMMIT");
 } catch (error) {

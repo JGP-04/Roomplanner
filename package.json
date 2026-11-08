@@ -8,8 +8,9 @@
     "dev:api": "tsx watch server/index.ts",
     "start:api": "tsx server/index.ts",
     "db:migrate": "tsx server/migrate.ts",
+    "db:encrypt-existing": "tsx server/encrypt-existing.ts",
     "typecheck": "tsc -b",
-    "test": "node --import tsx --test tests/*.test.ts",
+    "test": "TSX_TSCONFIG_PATH=tsconfig.app.json node --import tsx --test tests/*.test.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

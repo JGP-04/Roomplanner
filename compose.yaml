@@ -3,14 +3,15 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: roomplannr
-      POSTGRES_USER: roomplannr
-      POSTGRES_PASSWORD: roomplannr_dev
+      POSTGRES_USER: roomplannr_admin
+      POSTGRES_PASSWORD: roomplannr_admin_dev
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - roomplannr_pg_data:/var/lib/postgresql/data
+      - ./server/sql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U roomplannr -d roomplannr"]
+      test: ["CMD-SHELL", "pg_isready -U roomplannr_admin -d roomplannr"]
       interval: 5s
       timeout: 3s
       retries: 10
