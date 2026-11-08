@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
-import { ArrowLeft, Box, Check, Cloud, FolderOpen, LogIn, LogOut, Move3D, Plus, Redo2, Rotate3D, Save, Scaling, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, Box, Check, FolderOpen, LogIn, LogOut, Move3D, Plus, Redo2, Rotate3D, Save, Scaling, Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { catalogItemSchema, projectPayloadSchema, roomSchema, type CatalogItem, type ObjectInstance, type ProjectDocument, type ProjectPayload, type ProjectSummary, type Room } from "@/domain/project";
 import { api, type AccountUser } from "./api";
@@ -55,7 +55,9 @@ function NewProjectForm({ onCreate, busy }: NewProjectFormProps) {
         <label>Alto · cm<input type="number" min={5} max={10000} step={1} value={height} onChange={(event) => setHeight(event.target.value)} /></label>
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <Button type="submit" disabled={busy}>Crear ambiente <Plus size={17} aria-hidden="true" /></Button>
+      <Button type="submit" disabled={busy} aria-busy={busy}>
+        Crear y abrir editor <Plus size={17} aria-hidden="true" />
+      </Button>
     </form>
   );
 }
@@ -171,7 +173,7 @@ function CatalogForm({ onAdd }: { onAdd: (item: CatalogItem) => void }) {
       </div>
       <label className="color-label">Color<input type="color" value={color} onChange={(event) => setColor(event.target.value)} /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <Button type="submit" size="sm">Guardar objeto <Plus size={16} aria-hidden="true" /></Button>
+      <Button type="submit" size="sm">Añadir objeto <Plus size={16} aria-hidden="true" /></Button>
     </form>
   );
 }
@@ -198,12 +200,12 @@ function PropertiesPanel({ project, selected }: { project: ProjectDocument; sele
 
   return (
     <aside className="editor-properties" aria-label="Propiedades">
-      <p className="panel-label">Propiedades</p>
+      <h2 className="panel-title">Propiedades</h2>
       {selected && item ? (
         <div className="properties-content" key={selected.id}>
-          <h2>{item.name}</h2>
+          <h3>{item.name}</h3>
           <p className="subtle-text">{metersToCentimeters(item.width * selected.scale[0])} × {metersToCentimeters(item.depth * selected.scale[2])} × {metersToCentimeters(item.height * selected.scale[1])} cm · {item.kind === "box" ? "Volumen" : item.kind === "table" ? "Mesa" : "Estantería"}</p>
-          <h3>Dimensiones</h3>
+          <h4>Dimensiones</h4>
           <div className="field-grid compact-grid">
             {([
               ["Ancho", 0, item.width],
@@ -215,7 +217,7 @@ function PropertiesPanel({ project, selected }: { project: ProjectDocument; sele
               updateInstance(selected.id, { scale });
             }} />)}
           </div>
-          <h3>Posición</h3>
+          <h4>Posición</h4>
           <div className="field-grid compact-grid">
             {(["X", "Y", "Z"] as const).map((axis, index) => <NumberField key={axis} label={`${axis} · cm`} value={metersToCentimeters(selected.position[index])} step={1} onCommit={(value) => {
               const position: [number, number, number] = [...selected.position];
@@ -223,7 +225,7 @@ function PropertiesPanel({ project, selected }: { project: ProjectDocument; sele
               updateInstance(selected.id, { position });
             }} />)}
           </div>
-          <h3>Rotación y escala</h3>
+          <h4>Rotación y escala</h4>
           <NumberField label="Giro · grados" value={Math.round(selected.rotationY * 180 / Math.PI)} step={1} onCommit={(value) => updateInstance(selected.id, { rotationY: value * Math.PI / 180 })} />
           <div className="field-grid compact-grid">
             {(["X", "Y", "Z"] as const).map((axis, index) => <NumberField key={axis} label={`Escala ${axis}`} value={selected.scale[index]} min={0.1} max={10} step={0.1} onCommit={(value) => {
@@ -236,9 +238,9 @@ function PropertiesPanel({ project, selected }: { project: ProjectDocument; sele
         </div>
       ) : (
         <div className="properties-content">
-          <h2>Ambiente</h2>
-          <p className="subtle-text">Selecciona un objeto para editar su posición, giro y escala.</p>
-          <h3>Medidas del espacio</h3>
+          <h3>Ambiente</h3>
+          <p className="subtle-text">Selecciona un objeto para editarlo.</p>
+          <h4>Medidas del espacio</h4>
           <div className="field-grid compact-grid">
             {(["width", "depth", "height"] as const).map((key) => <NumberField key={key} label={`${key === "width" ? "Ancho" : key === "depth" ? "Largo" : "Alto"} · cm`} value={metersToCentimeters(project.room[key])} min={5} max={10000} onCommit={(value) => {
               const room = roomSchema.safeParse({ ...project.room, [key]: centimetersToMeters(value) });
@@ -439,7 +441,7 @@ export default function EditorPage() {
         {project ? <p className="editor-project-title">{project.title} <span>· {mode === "guest" ? "Invitado" : "Mi cuenta"}</span></p> : <p className="editor-project-title">Estudio de diseño</p>}
         <div className="editor-header-actions">
           {project && <button type="button" className="quiet-button" onClick={backToProjects}><FolderOpen size={17} aria-hidden="true" /> <span>Proyectos</span></button>}
-          {project && <Button className="editor-save-button" size="sm" onClick={saveProject} disabled={busy} aria-label={mode === "guest" ? "Guardar en mi cuenta" : dirty ? "Guardar cambios" : "Proyecto guardado"}><Save size={16} aria-hidden="true" /> <span className="save-label-long">{mode === "guest" ? "Guardar en mi cuenta" : dirty ? "Guardar cambios" : "Guardado"}</span><span className="save-label-short">Guardar</span></Button>}
+          {project && <Button className="editor-save-button" size="sm" onClick={saveProject} disabled={busy || (mode === "account" && !dirty)} aria-busy={busy} aria-label={mode === "guest" ? "Guardar en mi cuenta" : dirty ? "Guardar cambios" : "Proyecto guardado"}><Save size={16} aria-hidden="true" /> <span className="save-label-long">{mode === "guest" ? "Guardar en mi cuenta" : dirty ? "Guardar cambios" : "Guardado"}</span><span className="save-label-short">Guardar</span></Button>}
           {!project && user && <button type="button" className="quiet-button" onClick={logout}><LogOut size={17} aria-hidden="true" /> Salir</button>}
         </div>
       </header>
@@ -449,11 +451,11 @@ export default function EditorPage() {
       {showAuth && <div className="auth-overlay"><AuthForm onSuccess={authenticated} onCancel={() => setShowAuth(false)} /></div>}
 
       {checkingSession && !project ? <div className="editor-loading">Preparando ROOMPLANNR…</div> : project ? (
-        <div className={`editor-layout${busy ? " is-busy" : ""}`}>
+        <div className="editor-layout">
           <aside className="editor-sidebar" aria-label="Herramientas y catálogo">
             <button className="back-link" type="button" onClick={backToProjects}><ArrowLeft size={17} aria-hidden="true" /> Todos los proyectos</button>
             <div className="editor-side-section">
-              <p className="panel-label">Herramientas</p>
+              <h2 className="panel-title">Herramientas</h2>
               <div className="tool-row" role="group" aria-label="Transformar objeto">
                 {([
                   ["translate", Move3D, "Mover"],
@@ -467,10 +469,9 @@ export default function EditorPage() {
               </div>
             </div>
             <div className="editor-side-section">
-              <p className="panel-label">Catálogo del proyecto</p>
-              <p className="subtle-text">Crea una pieza una vez y colócala tantas veces como necesites.</p>
+              <h2 className="panel-title">Catálogo</h2>
               <div className="catalog-list">
-                {project.catalog.length === 0 && <p className="empty-note">Aún no hay objetos. Crea el primero abajo.</p>}
+                {project.catalog.length === 0 && <p className="empty-note">Crea un objeto para colocarlo en el ambiente.</p>}
                 {project.catalog.map((item) => <div className="catalog-row" key={item.id}>
                   <span className="catalog-swatch" style={{ backgroundColor: item.color }} aria-hidden="true"><Box size={16} /></span>
                   <span><strong>{item.name}</strong><small>{metersToCentimeters(item.width)} × {metersToCentimeters(item.depth)} × {metersToCentimeters(item.height)} cm</small></span>
@@ -482,7 +483,7 @@ export default function EditorPage() {
               </div>
             </div>
             <div className="editor-side-section">
-              <p className="panel-label">Crear objeto</p>
+              <h2 className="panel-title">Nuevo objeto</h2>
               <CatalogForm onAdd={(item) => store().addCatalogItem(item)} />
             </div>
           </aside>
@@ -490,7 +491,7 @@ export default function EditorPage() {
           <main className="editor-main">
             <div className="canvas-toolbar">
               <span><Check size={16} aria-hidden="true" /> Ambiente {metersToCentimeters(project.room.width)} × {metersToCentimeters(project.room.depth)} × {metersToCentimeters(project.room.height)} cm</span>
-              <span>{mode === "guest" ? "Guardado en este navegador" : dirty ? "Cambios sin guardar" : "Guardado en PostgreSQL"}</span>
+              <span>{mode === "guest" ? "Guardado en este navegador" : dirty ? "Cambios sin guardar" : "Todos los cambios guardados"}</span>
             </div>
             <Suspense fallback={<div className="editor-loading">Preparando el visor 3D…</div>}>
               <SceneViewport project={project} />
@@ -502,16 +503,14 @@ export default function EditorPage() {
       ) : (
         <main className="editor-setup">
           <div className="setup-intro">
-            <p className="eyebrow">ROOMPLANNR / Estudio</p>
-            <h1>Empieza por el espacio que imaginas.</h1>
-            <p>Introduce las medidas del ambiente y crea objetos propios. Puedes probar sin cuenta; tus proyectos quedarán guardados en este navegador.</p>
-            <div className="setup-features"><span><Box size={17} /> Ambiente a escala</span><span><Move3D size={17} /> Objetos editables</span><span><Cloud size={17} /> Guardado con cuenta</span></div>
+            <h1>Diseña tu ambiente a escala.</h1>
+            <p>Define sus medidas y abre el editor 3D. No necesitas una cuenta para empezar; tus proyectos quedarán guardados en este navegador.</p>
           </div>
           <div className="setup-card">
-            <div className="panel-heading"><div><p className="eyebrow">Nuevo proyecto</p><h2>Define tu ambiente</h2></div></div>
+            <div className="panel-heading"><h2>Nuevo ambiente</h2></div>
             <NewProjectForm onCreate={createProject} busy={busy} />
             {!user && <button type="button" className="login-link" onClick={() => setShowAuth(true)}><LogIn size={17} /> Iniciar sesión para guardar proyectos</button>}
-            {!serverAvailable && <p className="server-note">El modo invitado está disponible. Para guardar en una cuenta, inicia el servidor de ROOMPLANNR.</p>}
+            {!serverAvailable && <p className="server-note">El guardado en cuenta no está disponible ahora. Puedes seguir en modo invitado.</p>}
           </div>
           {!user && guestProjects.length > 0 && <section className="project-library" aria-labelledby="guest-library-title">
             <div className="library-heading"><h2 id="guest-library-title">Proyectos en este navegador</h2><span>Persisten aunque cierres la pestaña</span></div>

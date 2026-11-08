@@ -64,6 +64,24 @@
   font: inherit;
 }
 
+.quiet-button,
+.back-link,
+.text-button,
+.login-link,
+.resume-button,
+.history-row button,
+.danger-button,
+.tool-button,
+.catalog-row button,
+.project-card {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
 .quiet-button {
   min-height: 2.5rem;
   padding: 0.3rem 0.5rem;
@@ -146,22 +164,6 @@
   line-height: 1.75;
 }
 
-.setup-features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.2rem;
-  margin-top: 2.8rem;
-}
-
-.setup-features span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: #62594f;
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
 .setup-card,
 .auth-card {
   border: 1px solid #d8ccbd;
@@ -177,10 +179,6 @@
   align-items: start;
   gap: 1rem;
   margin-bottom: 1.75rem;
-}
-
-.panel-heading .eyebrow {
-  margin-bottom: 0.75rem;
 }
 
 .panel-heading h2,
@@ -397,11 +395,6 @@
   min-height: 38rem;
 }
 
-.editor-layout.is-busy {
-  pointer-events: none;
-  opacity: 0.7;
-}
-
 .editor-sidebar,
 .editor-properties {
   overflow: auto;
@@ -431,13 +424,12 @@
   padding: 1.5rem;
 }
 
-.panel-label {
+.panel-title {
   margin: 0 0 1rem;
-  color: var(--accent);
-  font-size: 0.65rem;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+  color: #3f3933;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .tool-row {
@@ -464,6 +456,17 @@
   border-color: var(--accent);
   background: #f5e6db;
   color: #893d28;
+}
+
+.tool-button:hover:not(.active) {
+  border-color: #a99a89;
+  background: #f8f1e8;
+}
+
+.tool-button:active,
+.catalog-row button:active,
+.project-card:active {
+  transform: translateY(1px);
 }
 
 .history-row {
@@ -525,8 +528,8 @@
 
 .catalog-row button {
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.75rem;
   place-items: center;
   border: 1px solid #d6c9b9;
   border-radius: 50%;
@@ -680,7 +683,7 @@
   display: none;
 }
 
-.properties-content h2 {
+.properties-content h3 {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 2rem;
@@ -688,7 +691,7 @@
   letter-spacing: -0.04em;
 }
 
-.properties-content h3 {
+.properties-content h4 {
   border-top: 1px solid #e4d9ca;
   margin: 1.75rem 0 1rem;
   padding-top: 1.3rem;
