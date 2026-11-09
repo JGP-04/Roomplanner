@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS catalog_items (
   id uuid PRIMARY KEY,
   project_id uuid NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name varchar(80) NOT NULL,
-  kind varchar(12) NOT NULL CHECK (kind IN ('box', 'table', 'shelf')),
+  kind varchar(12) NOT NULL CHECK (kind IN ('box', 'table', 'chair', 'armchair', 'shelf')),
   width double precision NOT NULL CHECK (width > 0),
   depth double precision NOT NULL CHECK (depth > 0),
   height double precision NOT NULL CHECK (height > 0),
