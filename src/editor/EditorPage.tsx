@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEven
 import { ArrowLeft, Box, Check, FolderOpen, LogIn, LogOut, Move3D, Plus, Redo2, Rotate3D, Save, Scaling, Trash2, Undo2 } from "lucide-react";
 import { EditorSetupSkeleton, ProjectGridSkeleton, ViewportSkeleton } from "@/components/editor-skeleton";
 import { Button } from "@/components/ui/button";
-import { catalogItemSchema, projectPayloadSchema, roomSchema, type CatalogItem, type ObjectInstance, type ProjectDocument, type ProjectPayload, type ProjectSummary, type Room } from "@/domain/project";
+import { catalogItemKindLabels, catalogItemKinds, catalogItemSchema, projectPayloadSchema, roomSchema, type CatalogItem, type ObjectInstance, type ProjectDocument, type ProjectPayload, type ProjectSummary, type Room } from "@/domain/project";
 import { api, type AccountUser } from "./api";
 import { centimetersToMeters, metersToCentimeters } from "./geometry";
 import { listGuestProjects } from "./guest-projects";
@@ -196,7 +196,7 @@ function CatalogForm({ onAdd }: { onAdd: (item: CatalogItem) => void }) {
     <form className="catalog-form" onSubmit={submit} noValidate>
       <label>Nombre<input placeholder="Ej. Mesa de comedor" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "catalog-error" : undefined} /></label>
       <label>Tipo<select value={kind} onChange={(event) => setKind(event.target.value as CatalogItem["kind"])}>
-        <option value="box">Volumen</option><option value="table">Mesa</option><option value="shelf">Estantería</option>
+        {catalogItemKinds.map((value) => <option key={value} value={value}>{catalogItemKindLabels[value]}</option>)}
       </select></label>
       <div className="field-grid compact-grid">
         <label>Ancho · cm<input type="number" min={5} max={10000} value={width} onChange={(event) => setWidth(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={error ? "catalog-error" : undefined} /></label>
@@ -236,7 +236,7 @@ function PropertiesPanel({ project, selected }: { project: ProjectDocument; sele
       {selected && item ? (
         <div className="properties-content" key={selected.id}>
           <h3>{item.name}</h3>
-          <p className="subtle-text">{metersToCentimeters(item.width * selected.scale[0])} × {metersToCentimeters(item.depth * selected.scale[2])} × {metersToCentimeters(item.height * selected.scale[1])} cm · {item.kind === "box" ? "Volumen" : item.kind === "table" ? "Mesa" : "Estantería"}</p>
+          <p className="subtle-text">{metersToCentimeters(item.width * selected.scale[0])} × {metersToCentimeters(item.depth * selected.scale[2])} × {metersToCentimeters(item.height * selected.scale[1])} cm · {catalogItemKindLabels[item.kind]}</p>
           <h4>Dimensiones</h4>
           <div className="field-grid compact-grid">
             {([

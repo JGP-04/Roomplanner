@@ -4,6 +4,17 @@ const dimension = z.number().finite().min(0.05).max(100);
 const coordinate = z.number().finite().min(-1000).max(1000);
 const scaleFactor = z.number().finite().min(0.0001).max(10);
 
+export const catalogItemKinds = ["box", "table", "chair", "armchair", "shelf"] as const;
+export type CatalogItemKind = typeof catalogItemKinds[number];
+
+export const catalogItemKindLabels: Record<CatalogItemKind, string> = {
+  box: "Volumen",
+  table: "Mesa",
+  chair: "Silla",
+  armchair: "Sillón",
+  shelf: "Estantería",
+};
+
 export const roomSchema = z.object({
   width: dimension,
   depth: dimension,
@@ -13,7 +24,7 @@ export const roomSchema = z.object({
 export const catalogItemSchema = z.object({
   id: z.uuid(),
   name: z.string().trim().min(1).max(80),
-  kind: z.enum(["box", "table", "shelf"]),
+  kind: z.enum(catalogItemKinds),
   width: dimension,
   depth: dimension,
   height: dimension,

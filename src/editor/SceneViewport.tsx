@@ -43,6 +43,80 @@ function Shape({ item, selected }: ShapeProps) {
     );
   }
 
+  if (item.kind === "chair") {
+    const seatThickness = Math.min(0.065, height / 8, depth / 6);
+    const seatTop = height * 0.5;
+    const legHeight = seatTop - seatThickness;
+    const legWidth = Math.min(0.05, width / 7, depth / 7);
+    const backThickness = Math.min(0.055, depth / 5, width / 6);
+    const seatDepth = Math.max(panel, depth - backThickness * 0.65);
+    return (
+      <>
+        <mesh castShadow receiveShadow position={[0, seatTop - seatThickness / 2, backThickness * 0.14]}>
+          <boxGeometry args={[width, seatThickness, seatDepth]} />
+          <meshStandardMaterial color={color} roughness={0.84} />
+        </mesh>
+        {[-1, 1].flatMap((x) => [-1, 1].map((z) => (
+          <mesh key={`${x}-${z}`} castShadow receiveShadow position={[
+            x * (width / 2 - legWidth / 2), legHeight / 2,
+            z * (depth / 2 - legWidth / 2),
+          ]}>
+            <boxGeometry args={[legWidth, legHeight, legWidth]} />
+            <meshStandardMaterial color={color} roughness={0.82} />
+          </mesh>
+        )))}
+        <mesh castShadow receiveShadow position={[
+          0, seatTop + (height - seatTop) / 2, -depth / 2 + backThickness / 2,
+        ]}>
+          <boxGeometry args={[width, height - seatTop, backThickness]} />
+          <meshStandardMaterial color={color} roughness={0.86} />
+        </mesh>
+        {selected && <mesh position={[0, height / 2, 0]}>
+          <boxGeometry args={[width, height, depth]} />
+          {outline}
+        </mesh>}
+      </>
+    );
+  }
+
+  if (item.kind === "armchair") {
+    const backThickness = Math.min(depth * 0.2, width * 0.16);
+    const armWidth = Math.min(width * 0.16, depth * 0.2);
+    const seatTop = height * 0.46;
+    const cushionThickness = Math.min(height * 0.16, depth * 0.16);
+    const seatDepth = Math.max(depth * 0.45, depth - backThickness * 1.15);
+    const baseHeight = Math.max(panel, seatTop - cushionThickness);
+    const armHeight = Math.min(height * 0.66, seatTop + cushionThickness);
+    return (
+      <>
+        <mesh castShadow receiveShadow position={[0, baseHeight / 2, backThickness * 0.08]}>
+          <boxGeometry args={[Math.max(panel, width - armWidth * 1.7), baseHeight, seatDepth * 0.88]} />
+          <meshStandardMaterial color={color} roughness={0.9} />
+        </mesh>
+        <mesh castShadow receiveShadow position={[0, seatTop - cushionThickness / 2, backThickness * 0.12]}>
+          <boxGeometry args={[Math.max(panel, width - armWidth * 2.15), cushionThickness, seatDepth]} />
+          <meshStandardMaterial color={color} roughness={0.96} />
+        </mesh>
+        <mesh castShadow receiveShadow position={[0, seatTop + (height - seatTop) / 2, -depth / 2 + backThickness / 2]}>
+          <boxGeometry args={[width, height - seatTop, backThickness]} />
+          <meshStandardMaterial color={color} roughness={0.96} />
+        </mesh>
+        {[-1, 1].map((side) => (
+          <mesh key={side} castShadow receiveShadow position={[
+            side * (width / 2 - armWidth / 2), armHeight / 2, backThickness * 0.06,
+          ]}>
+            <boxGeometry args={[armWidth, armHeight, Math.max(panel, depth - backThickness * 0.35)]} />
+            <meshStandardMaterial color={color} roughness={0.94} />
+          </mesh>
+        ))}
+        {selected && <mesh position={[0, height / 2, 0]}>
+          <boxGeometry args={[width, height, depth]} />
+          {outline}
+        </mesh>}
+      </>
+    );
+  }
+
   if (item.kind === "shelf") {
     return (
       <>

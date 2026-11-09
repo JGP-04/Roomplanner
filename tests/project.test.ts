@@ -19,6 +19,14 @@ test("un proyecto vacío es válido", () => {
   assert.equal(projectPayloadSchema.safeParse(project).success, true);
 });
 
+test("acepta silla y sillón como tipos de objeto predeterminados", () => {
+  for (const kind of ["chair", "armchair"] as const) {
+    const project = createEmptyProject("Sala", { width: 4, depth: 5, height: 2.7 });
+    project.catalog.push({ ...catalogItem, id: crypto.randomUUID(), kind });
+    assert.equal(projectPayloadSchema.safeParse(project).success, true);
+  }
+});
+
 test("no acepta instancias sin pieza en el catálogo", () => {
   const project = createEmptyProject("Sala", { width: 4, depth: 5, height: 2.7 });
   project.instances.push({
